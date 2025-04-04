@@ -1,9 +1,9 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // <- à ajouter
+import { useNavigation } from '@react-navigation/native'; 
 
 export default function HomeScreen() {
-  const navigation = useNavigation(); // <- à ajouter
+  const navigation = useNavigation(); 
 
   return (
     <View style={styles.container}>
