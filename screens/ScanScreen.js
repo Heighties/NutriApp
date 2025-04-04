@@ -1,49 +1,110 @@
-import { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, Alert, Button } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Modal,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-
-
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scannedData, setScannedData] = useState(null);
-  const cameraRef = useRef(null);
+  const [product, setProduct] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!permission || !permission.granted) {
-      requestPermission();
-    }
-  }, []);
+  if (!permission?.granted) {
+    requestPermission();
+    return <Text>Demande d'autorisation pour la caméra...</Text>;
+  }
 
-  const handleScan = async () => {
-    if (!cameraRef.current) return;
+  const handleBarcode = async ({ data }) => {
+    if (scannedData) return;
 
-    const result = await cameraRef.current.takePictureAsync({ skipProcessing: true });
-    const barcodes = await scanBarCodesAsync(result, [BarcodeType.EAN_13, BarcodeType.CODE_128, BarcodeType.QR]);
+    setScannedData(data);
+    setLoading(true);
 
-    if (barcodes.length > 0) {
-      setScannedData(barcodes[0].data);
-      Alert.alert('Code détecté', barcodes[0].data);
-    } else {
-      Alert.alert('Aucun code détecté');
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
+      const json = await res.json();
+
+      if (json.status === 1) {
+        setProduct(json.product);
+        setModalVisible(true);
+      } else {
+        setProduct({
+          product_name: 'Produit inconnu',
+          brands: '',
+          image_front_small_url: null,
+          nutriments: {},
+        });
+        setModalVisible(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setProduct({
+        product_name: 'Erreur lors du scan',
+        brands: '',
+        image_front_small_url: null,
+        nutriments: {},
+      });
+      setModalVisible(true);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!permission?.granted) {
-    return <Text>Demande d'autorisation pour la caméra...</Text>;
-  }
+  const closeModal = () => {
+    setScannedData(null);
+    setModalVisible(false);
+    setProduct(null);
+  };
+
+  const nutriments = product?.nutriments || {};
 
   return (
     <View style={styles.container}>
       <CameraView
-        ref={cameraRef}
+        onBarcodeScanned={handleBarcode}
+        barcodeScannerSettings={{
+          barcodeTypes: ['ean13', 'code128', 'qr'],
+        }}
         style={StyleSheet.absoluteFillObject}
-        facing="back"
-        enableTorch={false}
       />
-      <View style={styles.buttonContainer}>
-        <Button title="Scanner maintenant" onPress={handleScan} />
-      </View>
+
+      {loading && (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
+
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {product?.image_front_small_url && (
+              <Image
+                source={{ uri: product.image_front_small_url }}
+                style={styles.image}
+              />
+            )}
+            <Text style={styles.title}>{product?.product_name || 'Nom inconnu'}</Text>
+            <Text style={styles.brand}>Marque : {product?.brands || 'N/A'}</Text>
+            <View style={styles.nutrition}>
+              <Text>🔋 {nutriments['energy-kcal'] || '–'} kcal</Text>
+              <Text>💪 {nutriments.proteins || '–'} g protéines</Text>
+              <Text>🍞 {nutriments.carbohydrates || '–'} g glucides</Text>
+              <Text>🧈 {nutriments.fat || '–'} g lipides</Text>
+            </View>
+            <Pressable onPress={closeModal} style={styles.closeButton}>
+              <Text style={styles.closeText}>Fermer</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -52,12 +113,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    backgroundColor: 'white',
+  loading: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#00000088',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#00000099',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  image: {
+    width: 100,
+    height: 130,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  brand: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 10,
+  },
+  nutrition: {
+    gap: 4,
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  closeButton: {
+    backgroundColor: '#3b82f6',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    padding: 10,
+  },
+  closeText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
