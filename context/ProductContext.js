@@ -29,7 +29,7 @@ export const ProductProvider = ({ children }) => {
 
   return (
     <ProductContext.Provider
-      value={{ fridge, shoppingList, addToFridge, addToShoppingList, toggleCheck }}>
+      value={{ fridge, setFridge, shoppingList, addToFridge, addToShoppingList, toggleCheck }}>
       {children}
     </ProductContext.Provider>
   );
