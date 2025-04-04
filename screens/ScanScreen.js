@@ -7,8 +7,10 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useProductContext } from '../context/ProductContext';
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -16,6 +18,7 @@ export default function ScanScreen() {
   const [product, setProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { addToFridge, addToShoppingList } = useProductContext();
 
   if (!permission?.granted) {
     requestPermission();
@@ -33,10 +36,11 @@ export default function ScanScreen() {
       const json = await res.json();
 
       if (json.status === 1) {
-        setProduct(json.product);
+        setProduct({ ...json.product, code: data });
         setModalVisible(true);
       } else {
         setProduct({
+          code: data,
           product_name: 'Produit inconnu',
           brands: '',
           image_front_small_url: null,
@@ -47,6 +51,7 @@ export default function ScanScreen() {
     } catch (err) {
       console.error(err);
       setProduct({
+        code: data,
         product_name: 'Erreur lors du scan',
         brands: '',
         image_front_small_url: null,
@@ -62,6 +67,16 @@ export default function ScanScreen() {
     setScannedData(null);
     setModalVisible(false);
     setProduct(null);
+  };
+
+  const handleAddToFridge = () => {
+    if (product) addToFridge(product);
+    closeModal();
+  };
+
+  const handleAddToShoppingList = () => {
+    if (product) addToShoppingList(product);
+    closeModal();
   };
 
   const nutriments = product?.nutriments || {};
@@ -99,6 +114,16 @@ export default function ScanScreen() {
               <Text>🍞 {nutriments.carbohydrates || '–'} g glucides</Text>
               <Text>🧈 {nutriments.fat || '–'} g lipides</Text>
             </View>
+
+            <View style={styles.actions}>
+              <TouchableOpacity onPress={handleAddToFridge} style={styles.actionButton}>
+                <Text style={styles.actionText}>+ Frigo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddToShoppingList} style={styles.actionButton}>
+                <Text style={styles.actionText}>+ Liste</Text>
+              </TouchableOpacity>
+            </View>
+
             <Pressable onPress={closeModal} style={styles.closeButton}>
               <Text style={styles.closeText}>Fermer</Text>
             </Pressable>
@@ -151,6 +176,21 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 10,
     marginBottom: 15,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  actionButton: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  actionText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   closeButton: {
     backgroundColor: '#3b82f6',
