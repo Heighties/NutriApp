@@ -16,20 +16,22 @@ export default function ShoppingListScreen() {
   const navigation = useNavigation();
 
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      {item.image_front_small_url && (
-        <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
-      )}
-      <CheckBox
-        checked={item.checked}
-        onPress={() => toggleCheck(item.code)}
-        checkedColor="#10b981"
-        containerStyle={{ backgroundColor: 'transparent', borderWidth: 0, padding: 0 }}
-      />
-      <Text style={[styles.itemText, item.checked && styles.checked]}>
-        {item.product_name || 'Nom inconnu'} {item.quantity > 1 ? `×${item.quantity}` : ''}
-      </Text>
-    </View>
+    <TouchableOpacity onPress={() => navigation.navigate('ProductDetails', { product: item })}>
+      <View style={styles.itemContainer}>
+        {item.image_front_small_url && (
+          <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
+        )}
+        <CheckBox
+          checked={item.checked}
+          onPress={() => toggleCheck(item.code)}
+          checkedColor="#10b981"
+          containerStyle={{ backgroundColor: 'transparent', borderWidth: 0, padding: 0 }}
+        />
+        <Text style={styles.itemText}>
+          {item.product_name || 'Nom inconnu'} {item.quantity > 1 ? `×${item.quantity}` : ''}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 
   const openScanner = () => {
@@ -98,10 +100,6 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
     flexShrink: 1,
-  },
-  checked: {
-    textDecorationLine: 'line-through',
-    color: '#999',
   },
   floatingBtn: {
     position: 'absolute',

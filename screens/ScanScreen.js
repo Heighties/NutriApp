@@ -107,6 +107,13 @@ export default function ScanScreen() {
     closeModal();
   };
 
+  const handleViewDetails = () => {
+    if (product) {
+      closeModal();
+      navigation.navigate('ProductDetails', { product });
+    }
+  };
+
   const nutriments = product?.nutriments || {};
 
   const animatedStyle = {
@@ -157,7 +164,7 @@ export default function ScanScreen() {
               <Text>🔋 {nutriments['energy-kcal'] || '–'} kcal</Text>
               <Text>💪 {nutriments.proteins || '–'} g protéines</Text>
               <Text>🍞 {nutriments.carbohydrates || '–'} g glucides</Text>
-              <Text>🧈 {nutriments.fat || '–'} g lipides</Text>
+              <Text>🫘 {nutriments.fat || '–'} g lipides</Text>
             </View>
 
             <View style={styles.actions}>
@@ -168,6 +175,10 @@ export default function ScanScreen() {
                 <Text style={styles.actionText}>+ Liste</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity onPress={handleViewDetails} style={[styles.actionButton, { backgroundColor: '#6366f1', marginBottom: 12 }]}>
+              <Text style={styles.actionText}>🔎 Voir les détails</Text>
+            </TouchableOpacity>
 
             <Pressable onPress={closeModal} style={styles.closeButton}>
               <Text style={styles.closeText}>Fermer</Text>

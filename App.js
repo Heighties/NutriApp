@@ -8,6 +8,8 @@ import ScanScreen from './screens/ScanScreen';
 import FridgeScreen from './screens/FridgeScreen';
 import ShoppingListScreen from './screens/ShoppingListScreen';
 import { ProductProvider } from './context/ProductContext';
+import ProductDetailsScreen from './screens/ProductDetailsScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +23,7 @@ export default function App() {
             <Stack.Screen name="Scan" component={ScanScreen} />
             <Stack.Screen name="Fridge" component={FridgeScreen} />
             <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
+            <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: 'Détails du produit' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProductProvider>
