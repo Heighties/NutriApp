@@ -26,6 +26,14 @@ export default function ScanScreen() {
   const route = useRoute();
   const { addToFridge, addToShoppingList } = useProductContext();
 
+  const nutriscoreColors = {
+    a: '#22c55e',
+    b: '#84cc16',
+    c: '#eab308',
+    d: '#f97316',
+    e: '#ef4444',
+  };
+
   useEffect(() => {
     if (!permission || !permission.granted) {
       requestPermission();
@@ -160,6 +168,15 @@ export default function ScanScreen() {
             )}
             <Text style={styles.title}>{product?.product_name || 'Nom inconnu'}</Text>
             <Text style={styles.brand}>Marque : {product?.brands || 'N/A'}</Text>
+
+            {product?.nutriscore_grade && (
+              <View style={[styles.nutriscoreBox, { backgroundColor: nutriscoreColors[product.nutriscore_grade] || '#ccc' }]}>
+                <Text style={styles.nutriscoreText}>
+                  Nutri-Score : {product.nutriscore_grade.toUpperCase()}
+                </Text>
+              </View>
+            )}
+
             <View style={styles.nutrition}>
               <Text>🔋 {nutriments['energy-kcal'] || '–'} kcal</Text>
               <Text>💪 {nutriments.proteins || '–'} g protéines</Text>
@@ -191,9 +208,7 @@ export default function ScanScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   loading: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
@@ -227,6 +242,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 10,
+  },
+  nutriscoreBox: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  nutriscoreText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   nutrition: {
     gap: 4,

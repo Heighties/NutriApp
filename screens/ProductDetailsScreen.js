@@ -46,6 +46,15 @@ export default function ProductDetailsScreen() {
   }, [product]);
 
   const nutriments = product.nutriments || {};
+  const nutriscore = product.nutriscore_grade;
+
+  const nutriscoreColors = {
+    a: '#22c55e',
+    b: '#84cc16',
+    c: '#eab308',
+    d: '#f97316',
+    e: '#ef4444',
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -55,6 +64,12 @@ export default function ProductDetailsScreen() {
       />
       <Text style={styles.name}>{product.product_name}</Text>
       <Text style={styles.brand}>{product.brands}</Text>
+
+      {nutriscore && (
+        <View style={[styles.nutriscoreContainer, { backgroundColor: nutriscoreColors[nutriscore] || '#ccc' }]}>
+          <Text style={styles.nutriscoreText}>Nutri-Score : {nutriscore.toUpperCase()}</Text>
+        </View>
+      )}
 
       <View style={styles.nutrition}>
         <Text>🔋 {nutriments['energy-kcal'] || '–'} kcal</Text>
@@ -102,6 +117,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 10,
+  },
+  nutriscoreContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  nutriscoreText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   nutrition: {
     gap: 4,
