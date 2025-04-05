@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   Pressable,
   ActivityIndicator,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useProductContext } from '../context/ProductContext';
 
@@ -18,18 +20,24 @@ export default function ScanScreen() {
   const [product, setProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [readyToScan, setReadyToScan] = useState(false);
+  const [highlightAnim] = useState(new Animated.Value(0));
+  const navigation = useNavigation();
+  const route = useRoute();
   const { addToFridge, addToShoppingList } = useProductContext();
 
-  if (!permission?.granted) {
-    requestPermission();
-    return <Text>Demande d'autorisation pour la caméra...</Text>;
-  }
+  useEffect(() => {
+    if (!permission || !permission.granted) {
+      requestPermission();
+    }
+  }, []);
 
   const handleBarcode = async ({ data }) => {
     if (scannedData) return;
 
     setScannedData(data);
     setLoading(true);
+    animateHighlight();
 
     try {
       const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
@@ -37,7 +45,15 @@ export default function ScanScreen() {
 
       if (json.status === 1) {
         setProduct({ ...json.product, code: data });
-        setModalVisible(true);
+        if (route.params?.autoAddToFridge) {
+          addToFridge({ ...json.product, code: data });
+          setScannedData(null);
+          setReadyToScan(false);
+          alert('Produit ajouté au frigo');
+          navigation.goBack();
+        } else {
+          setModalVisible(true);
+        }
       } else {
         setProduct({
           code: data,
@@ -63,10 +79,22 @@ export default function ScanScreen() {
     }
   };
 
+  const animateHighlight = () => {
+    highlightAnim.setValue(0);
+    Animated.timing(highlightAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: false,
+    }).start(() => {
+      highlightAnim.setValue(0);
+    });
+  };
+
   const closeModal = () => {
     setScannedData(null);
     setModalVisible(false);
     setProduct(null);
+    setReadyToScan(false);
   };
 
   const handleAddToFridge = () => {
@@ -81,15 +109,32 @@ export default function ScanScreen() {
 
   const nutriments = product?.nutriments || {};
 
+  const animatedStyle = {
+    backgroundColor: highlightAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['transparent', '#ffffff33'],
+    }),
+  };
+
+  if (!permission?.granted) {
+    return <Text>Demande d'autorisation pour la caméra...</Text>;
+  }
+
   return (
     <View style={styles.container}>
       <CameraView
-        onBarcodeScanned={handleBarcode}
-        barcodeScannerSettings={{
-          barcodeTypes: ['ean13', 'code128', 'qr'],
-        }}
+        onBarcodeScanned={readyToScan && !scannedData ? handleBarcode : undefined}
+        barcodeScannerSettings={{ barcodeTypes: ['ean13', 'code128', 'qr'] }}
         style={StyleSheet.absoluteFillObject}
       />
+
+      <Animated.View style={[styles.targetBox, animatedStyle]} />
+
+      {!readyToScan && (
+        <TouchableOpacity style={styles.scanButton} onPress={() => setReadyToScan(true)}>
+          <View style={styles.innerCircle} />
+        </TouchableOpacity>
+      )}
 
       {loading && (
         <View style={styles.loading}>
@@ -201,5 +246,34 @@ const styles = StyleSheet.create({
   closeText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  targetBox: {
+    position: 'absolute',
+    top: '40%',
+    left: '15%',
+    width: '70%',
+    height: 200,
+    borderWidth: 2,
+    borderColor: 'white',
+    borderRadius: 10,
+    zIndex: 10,
+  },
+  scanButton: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    width: 70,
+    height: 70,
+    backgroundColor: '#3b82f6',
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  innerCircle: {
+    width: 30,
+    height: 30,
+    backgroundColor: 'white',
+    borderRadius: 15,
   },
 });

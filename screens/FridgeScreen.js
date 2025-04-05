@@ -1,57 +1,42 @@
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useProductContext } from '../context/ProductContext';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
-import { RectButton } from 'react-native-gesture-handler';
-import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function FridgeScreen() {
-  const navigation = useNavigation();
-  const { fridge, setFridge } = useProductContext();
+  const { fridge, addToFridge, removeOneFromFridge } = useProductContext();
 
-  const removeFromFridge = (code) => {
-    setFridge((prev) => prev.filter((item) => item.code !== code));
-  };
-
-  const renderRightActions = (code) => (
-    <RectButton style={styles.deleteButton} onPress={() => removeFromFridge(code)}>
-      <Text style={styles.deleteText}>Supprimer</Text>
-    </RectButton>
+  const renderItem = ({ item }) => (
+    <View style={styles.itemContainer}>
+      {item.image_front_small_url && (
+        <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
+      )}
+      <View style={styles.info}>
+        <Text style={styles.name}>{item.product_name || 'Produit'}</Text>
+        <Text style={styles.quantity}>Quantité : {item.quantity || 1}</Text>
+      </View>
+      <View style={styles.actions}>
+        <TouchableOpacity onPress={() => removeOneFromFridge(item.code)} style={styles.actionBtn}>
+          <Text style={styles.actionText}>-</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => addToFridge(item)} style={styles.actionBtn}>
+          <Text style={styles.actionText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
-
-  const goToScanAndAddToFridge = () => {
-    navigation.navigate('Scan', { autoAddToFridge: true });
-  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🧊 Mon Frigo</Text>
       {fridge.length === 0 ? (
-        <Text style={styles.empty}>Aucun produit dans le frigo.</Text>
+        <Text style={styles.empty}>Votre frigo est vide</Text>
       ) : (
         <FlatList
           data={fridge}
           keyExtractor={(item, index) => item.code + index}
-          renderItem={({ item }) => (
-            <Swipeable renderRightActions={() => renderRightActions(item.code)}>
-              <View style={styles.item}>
-                {item.image_front_small_url && (
-                  <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
-                )}
-                <View>
-                  <Text style={styles.name}>{item.product_name || 'Nom inconnu'}</Text>
-                  <Text style={styles.brand}>{item.brands || 'Marque inconnue'}</Text>
-                </View>
-              </View>
-            </Swipeable>
-          )}
+          renderItem={renderItem}
         />
       )}
-
-      <TouchableOpacity style={styles.scanButton} onPress={goToScanAndAddToFridge}>
-        <Ionicons name="add" size={28} color="white" />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -60,7 +45,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#f0fdf4',
   },
   title: {
     fontSize: 22,
@@ -71,55 +56,49 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     color: '#888',
+    marginTop: 20,
   },
-  item: {
+  itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 12,
     backgroundColor: '#fff',
-    borderRadius: 8,
+    padding: 12,
     marginBottom: 10,
+    borderRadius: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   image: {
-    width: 50,
-    height: 60,
-    borderRadius: 4,
+    width: 60,
+    height: 80,
     resizeMode: 'contain',
+    marginRight: 10,
+  },
+  info: {
+    flex: 1,
   },
   name: {
-    fontWeight: 'bold',
     fontSize: 16,
+    fontWeight: '600',
   },
-  brand: {
-    color: '#666',
+  quantity: {
+    marginTop: 4,
+    color: '#555',
   },
-  deleteButton: {
-    backgroundColor: '#ef4444',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: 20,
-    marginVertical: 5,
-    borderRadius: 8,
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
   },
-  deleteText: {
-    color: '#fff',
+  actionBtn: {
+    backgroundColor: '#d1d5db',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  actionText: {
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  scanButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    backgroundColor: '#3b82f6',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
   },
 });

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const ProductContext = createContext();
 
@@ -7,11 +7,41 @@ export const ProductProvider = ({ children }) => {
   const [shoppingList, setShoppingList] = useState([]);
 
   const addToFridge = (product) => {
-    setFridge((prev) => [...prev, product]);
+    setFridge((prev) => {
+      const existing = prev.find((p) => p.code === product.code);
+      if (existing) {
+        return prev.map((p) =>
+          p.code === product.code ? { ...p, quantity: (p.quantity || 1) + 1 } : p
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeOneFromFridge = (code) => {
+    setFridge((prev) => {
+      const product = prev.find((p) => p.code === code);
+      if (!product) return prev;
+      if (product.quantity > 1) {
+        return prev.map((p) =>
+          p.code === code ? { ...p, quantity: p.quantity - 1 } : p
+        );
+      } else {
+        return prev.filter((p) => p.code !== code);
+      }
+    });
   };
 
   const addToShoppingList = (product) => {
-    setShoppingList((prev) => [...prev, { ...product, checked: false }]);
+    setShoppingList((prev) => {
+      const existing = prev.find((p) => p.code === product.code);
+      if (existing) {
+        return prev.map((p) =>
+          p.code === product.code ? { ...p, quantity: (p.quantity || 1) + 1 } : p
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
   };
 
   const toggleCheck = (code) => {
@@ -19,9 +49,9 @@ export const ProductProvider = ({ children }) => {
       const updated = prev.map((item) =>
         item.code === code ? { ...item, checked: !item.checked } : item
       );
-      const justChecked = updated.find((item) => item.code === code && item.checked);
-      if (justChecked) {
-        addToFridge(justChecked);
+      const checkedItem = updated.find((item) => item.code === code && item.checked);
+      if (checkedItem) {
+        addToFridge(checkedItem);
       }
       return updated.filter((item) => !(item.code === code && item.checked));
     });
@@ -29,7 +59,7 @@ export const ProductProvider = ({ children }) => {
 
   return (
     <ProductContext.Provider
-      value={{ fridge, setFridge, shoppingList, addToFridge, addToShoppingList, toggleCheck }}>
+      value={{ fridge, shoppingList, addToFridge, removeOneFromFridge, addToShoppingList, toggleCheck }}>
       {children}
     </ProductContext.Provider>
   );
