@@ -1,28 +1,39 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useProductContext } from '../context/ProductContext';
 
 export default function FridgeScreen() {
   const { fridge, addToFridge, removeOneFromFridge } = useProductContext();
+  const navigation = useNavigation();
 
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      {item.image_front_small_url && (
-        <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
-      )}
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.product_name || 'Produit'}</Text>
-        <Text style={styles.quantity}>Quantité : {item.quantity || 1}</Text>
+    <TouchableOpacity onPress={() => navigation.navigate('ProductDetails', { product: item })}>
+      <View style={styles.itemContainer}>
+        {item.image_front_small_url && (
+          <Image source={{ uri: item.image_front_small_url }} style={styles.image} />
+        )}
+        <View style={styles.info}>
+          <Text style={styles.name}>{item.product_name || 'Produit'}</Text>
+          <Text style={styles.quantity}>Quantité : {item.quantity || 1}</Text>
+        </View>
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={() => removeOneFromFridge(item.code)} style={styles.actionBtn}>
+            <Text style={styles.actionText}>-</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => addToFridge(item)} style={styles.actionBtn}>
+            <Text style={styles.actionText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={() => removeOneFromFridge(item.code)} style={styles.actionBtn}>
-          <Text style={styles.actionText}>-</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => addToFridge(item)} style={styles.actionBtn}>
-          <Text style={styles.actionText}>+</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
