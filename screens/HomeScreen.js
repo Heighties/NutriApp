@@ -1,14 +1,57 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useUserContext } from '../context/UserContext';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const { profile } = useUserContext();
 
   return (
     <View style={styles.container}>
+      {/* Bouton profil */}
+      <View style={styles.topRightButton}>
+        <TouchableOpacity
+          onPress={() =>
+            profile
+              ? navigation.navigate('Profile')
+              : navigation.navigate('ProfileSetup')
+          }
+        >
+          <Ionicons name="person-circle-outline" size={36} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Titre */}
       <Text style={styles.title}>Bienvenue sur NutriApp 🍽️</Text>
 
+      {/* Bloc résumé calorique */}
+      <View style={styles.summaryBox}>
+        {profile ? (
+          <>
+            <Text style={styles.summaryTitle}>Suivi nutritionnel</Text>
+            <Text style={styles.summaryText}>
+              🔥 Besoins journaliers : {profile.besoinsCaloriques} kcal
+            </Text>
+            <Text style={styles.summaryText}>🍗 Consommés : 0 kcal</Text>
+            <Text style={styles.summaryText}>
+              🧮 Restants : {profile.besoinsCaloriques} kcal
+            </Text>
+          </>
+        ) : (
+          <Text style={styles.summaryText}>
+            Créez votre profil pour suivre vos apports
+          </Text>
+        )}
+      </View>
+
+      {/* Boutons */}
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Fridge')}>
         <Text style={styles.buttonText}>🧊 Mon Frigo</Text>
       </TouchableOpacity>
@@ -17,20 +60,14 @@ export default function HomeScreen() {
         <Text style={styles.buttonText}>🛒 Ma Liste de Courses</Text>
       </TouchableOpacity>
 
-      {/* Bouton flottant de scan */}
-      <TouchableOpacity
-        style={styles.scanButton}
-        onPress={() => navigation.navigate('Scan')}
-      >
-        <Ionicons name="barcode-outline" size={32} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Recipes')}
-      >
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Recipes')}>
         <Text style={styles.buttonText}>🍽️ Voir les Recettes</Text>
       </TouchableOpacity>
 
+      {/* Bouton flottant de scan */}
+      <TouchableOpacity style={styles.scanButton} onPress={() => navigation.navigate('Scan')}>
+        <Ionicons name="barcode-outline" size={32} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -38,15 +75,35 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    paddingTop: 60,
     alignItems: 'center',
-    gap: 16,
     backgroundColor: '#f0f0f0',
+  },
+  topRightButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 24,
+  },
+  summaryBox: {
+    backgroundColor: '#e0f2fe',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    width: '85%',
+  },
+  summaryTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 6,
+  },
+  summaryText: {
+    fontSize: 14,
   },
   button: {
     backgroundColor: '#3b82f6',
@@ -54,6 +111,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 200,
     alignItems: 'center',
+    marginBottom: 12,
   },
   buttonText: {
     color: '#fff',

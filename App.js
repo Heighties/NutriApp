@@ -11,6 +11,9 @@ import { ProductProvider } from './context/ProductContext';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import RecipesScreen from './screens/RecipesScreen'
 import RecipeDetailsScreen from './screens/RecipeDetailsScreen';
+import { UserProvider } from './context/UserContext';
+import ProfileSetupScreen from './screens/ProfileSetupScreen';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -19,6 +22,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ProductProvider>
+        <UserProvider>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Home">
             <Stack.Screen name="Home" component={HomeScreen} />
@@ -28,8 +32,10 @@ export default function App() {
             <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: 'Détails du produit' }} />
             <Stack.Screen name="Recipes" component={RecipesScreen} />
             <Stack.Screen name="RecipeDetails" component={RecipeDetailsScreen} />
+            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
           </Stack.Navigator>
         </NavigationContainer>
+        </UserProvider>
       </ProductProvider>
     </GestureHandlerRootView>
   );
