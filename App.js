@@ -9,6 +9,8 @@ import FridgeScreen from './screens/FridgeScreen';
 import ShoppingListScreen from './screens/ShoppingListScreen';
 import { ProductProvider } from './context/ProductContext';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
+import RecipesScreen from './screens/RecipesScreen'
+import RecipeDetailsScreen from './screens/RecipeDetailsScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -24,6 +26,8 @@ export default function App() {
             <Stack.Screen name="Fridge" component={FridgeScreen} />
             <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
             <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: 'Détails du produit' }} />
+            <Stack.Screen name="Recipes" component={RecipesScreen} />
+            <Stack.Screen name="RecipeDetails" component={RecipeDetailsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProductProvider>

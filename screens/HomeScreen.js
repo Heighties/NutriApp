@@ -24,6 +24,13 @@ export default function HomeScreen() {
       >
         <Ionicons name="barcode-outline" size={32} color="white" />
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('Recipes')}
+      >
+        <Text style={styles.buttonText}>🍽️ Voir les Recettes</Text>
+      </TouchableOpacity>
+
     </View>
   );
 }
