@@ -1,24 +1,20 @@
+// RecipeDetailsScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, Image, TouchableOpacity
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useProductContext } from '../context/ProductContext';
 
 export default function RecipeDetailsScreen() {
   const route = useRoute();
-  const { recipe } = route.params;
+  const { recipe } = route.params || {};
   const { fridge, shoppingList, addToShoppingList } = useProductContext();
 
   const [missingIngredients, setMissingIngredients] = useState([]);
 
   useEffect(() => {
-    if (!recipe?.extendedIngredients) return;
+    if (!recipe || !recipe.extendedIngredients) return;
 
     const fridgeNames = fridge.map(p =>
       p.product_name?.toLowerCase().trim()
@@ -26,7 +22,7 @@ export default function RecipeDetailsScreen() {
 
     const missing = recipe.extendedIngredients.filter(ingredient => {
       const name = ingredient.name?.toLowerCase().trim();
-      return !fridgeNames.includes(name);
+      return name && !fridgeNames.includes(name);
     });
 
     setMissingIngredients(missing);
@@ -48,17 +44,21 @@ export default function RecipeDetailsScreen() {
     addToShoppingList(formatted);
   };
 
+  if (!recipe) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.error}>❌ Aucune recette à afficher.</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
-      {recipe.image && (
-        <Image source={{ uri: recipe.image }} style={styles.image} />
-      )}
+      <Image source={{ uri: recipe.image }} style={styles.image} />
+      <Text style={styles.title}>{recipe.title}</Text>
 
-      <Text style={styles.title}>{recipe.title || 'Recette'}</Text>
-
-      {/* INGREDIENTS */}
       <Text style={styles.sectionTitle}>📝 Ingrédients :</Text>
-      {recipe?.extendedIngredients?.length > 0 ? (
+      {recipe.extendedIngredients?.length > 0 ? (
         recipe.extendedIngredients.map((ing, index) => {
           const missing = missingIngredients.find(i => i.id === ing.id);
           const isAdded = isInShoppingList(ing.name);
@@ -82,21 +82,16 @@ export default function RecipeDetailsScreen() {
           );
         })
       ) : (
-        <Text style={{ fontStyle: 'italic', color: '#999' }}>
-          Aucune information sur les ingrédients.
-        </Text>
+        <Text style={styles.emptyText}>Aucune information sur les ingrédients.</Text>
       )}
 
-      {/* INSTRUCTIONS */}
       <Text style={styles.sectionTitle}>👨‍🍳 Instructions :</Text>
-      {recipe?.analyzedInstructions?.[0]?.steps?.length > 0 ? (
+      {recipe.analyzedInstructions?.[0]?.steps?.length > 0 ? (
         recipe.analyzedInstructions[0].steps.map((step, i) => (
           <Text key={i} style={styles.stepText}>👉 {step.step}</Text>
         ))
       ) : (
-        <Text style={{ fontStyle: 'italic', color: '#999' }}>
-          Aucune instruction disponible.
-        </Text>
+        <Text style={styles.emptyText}>Aucune instruction disponible.</Text>
       )}
     </ScrollView>
   );
@@ -147,6 +142,20 @@ const styles = StyleSheet.create({
   addBtnText: {
     color: '#fff',
     fontSize: 13,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    fontStyle: 'italic',
+    color: '#999',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  error: {
+    color: '#ef4444',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
