@@ -13,6 +13,7 @@ import RecipesScreen from './screens/RecipesScreen'
 import RecipeDetailsScreen from './screens/RecipeDetailsScreen';
 import { UserProvider } from './context/UserContext';
 import ProfileSetupScreen from './screens/ProfileSetupScreen';
+import ProfileDetailsScreen from './screens/ProfileDetailsScreen';
 
 
 
@@ -33,6 +34,7 @@ export default function App() {
             <Stack.Screen name="Recipes" component={RecipesScreen} />
             <Stack.Screen name="RecipeDetails" component={RecipeDetailsScreen} />
             <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+            <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
         </UserProvider>

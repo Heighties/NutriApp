@@ -1,16 +1,23 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [profile, setProfile] = useState(null); // { age, sexe, taille, poids, activité, objectif, besoinsCaloriques, macros }
+  const [profile, setProfile] = useState(null);
 
-  const updateProfile = (data) => {
-    setProfile(data);
-  };
+  useEffect(() => {
+    const loadProfile = async () => {
+      const data = await AsyncStorage.getItem('userProfile');
+      if (data) {
+        setProfile(JSON.parse(data));
+      }
+    };
+    loadProfile();
+  }, []);
 
   return (
-    <UserContext.Provider value={{ profile, updateProfile }}>
+    <UserContext.Provider value={{ profile, setProfile }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,35 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useUserContext } from '../context/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const { profile } = useUserContext();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      const storedProfile = await AsyncStorage.getItem('userProfile');
+      if (storedProfile) {
+        setProfile(JSON.parse(storedProfile));
+      }
+    };
+    checkProfile();
+  }, []);
+
+  const handleProfilePress = () => {
+    if (profile) {
+      navigation.navigate('ProfileDetails');
+    } else {
+      navigation.navigate('ProfileSetup');
+    }
+  };
 
   return (
     <View style={styles.container}>
       {/* Bouton profil */}
       <View style={styles.topRightButton}>
-        <TouchableOpacity
-          onPress={() =>
-            profile
-              ? navigation.navigate('Profile')
-              : navigation.navigate('ProfileSetup')
-          }
-        >
+        <TouchableOpacity onPress={handleProfilePress}>
           <Ionicons name="person-circle-outline" size={36} color="#333" />
         </TouchableOpacity>
       </View>
@@ -37,11 +49,11 @@ export default function HomeScreen() {
           <>
             <Text style={styles.summaryTitle}>Suivi nutritionnel</Text>
             <Text style={styles.summaryText}>
-              🔥 Besoins journaliers : {profile.besoinsCaloriques} kcal
+              🔥 Besoins journaliers : {profile.besoinsCaloriques || 0} kcal
             </Text>
             <Text style={styles.summaryText}>🍗 Consommés : 0 kcal</Text>
             <Text style={styles.summaryText}>
-              🧮 Restants : {profile.besoinsCaloriques} kcal
+              🧮 Restants : {profile.besoinsCaloriques || 0} kcal
             </Text>
           </>
         ) : (
