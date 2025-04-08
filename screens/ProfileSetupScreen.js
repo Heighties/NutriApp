@@ -54,7 +54,7 @@ export default function ProfileSetupScreen() {
 
     try {
       await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
-      setProfile(profileData); // Met à jour le contexte
+      setProfile(profileData);
       alert('Profil enregistré avec succès !');
       navigation.navigate('Home');
     } catch (e) {
