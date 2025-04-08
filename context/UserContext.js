@@ -1,18 +1,26 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+// context/UserContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserContext = createContext();
 
-export const UserProvider = ({ children }) => {
+export function UserProvider({ children }) {
   const [profile, setProfile] = useState(null);
 
+  // 🔁 Charger automatiquement le profil au démarrage
   useEffect(() => {
     const loadProfile = async () => {
-      const data = await AsyncStorage.getItem('userProfile');
-      if (data) {
-        setProfile(JSON.parse(data));
+      try {
+        const stored = await AsyncStorage.getItem('userProfile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setProfile(parsed);
+        }
+      } catch (e) {
+        console.error('Erreur chargement profil :', e);
       }
     };
+
     loadProfile();
   }, []);
 
@@ -21,6 +29,8 @@ export const UserProvider = ({ children }) => {
       {children}
     </UserContext.Provider>
   );
-};
+}
 
-export const useUserContext = () => useContext(UserContext);
+export function useUserContext() {
+  return useContext(UserContext);
+}

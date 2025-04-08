@@ -10,28 +10,53 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUserContext } from '../context/UserContext'; // ✅ Import du contexte utilisateur
+import { useUserContext } from '../context/UserContext';
 
 export default function ProfileSetupScreen() {
   const navigation = useNavigation();
-  const { setProfile } = useUserContext(); // ✅ On récupère la fonction de mise à jour
+  const { setProfile } = useUserContext();
 
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
   const [goal, setGoal] = useState('maintien');
   const [diet, setDiet] = useState('aucune');
 
+  const calculateCalories = () => {
+    // Formule de base : Mifflin-St Jeor (sans distinction homme/femme pour l'exemple)
+    let base = 10 * parseFloat(weight) + 6.25 * parseFloat(height) - 5 * parseFloat(age);
+    let adjusted = base;
+
+    if (goal === 'perte') adjusted -= 300;
+    else if (goal === 'prise') adjusted += 300;
+
+    return Math.round(adjusted);
+  };
+
   const handleSave = async () => {
+    if (!name || !age || !height || !weight) {
+      alert('Merci de remplir tous les champs.');
+      return;
+    }
+
+    const besoinsCaloriques = calculateCalories();
+
     const profileData = {
       name,
+      age: parseInt(age),
+      height: parseInt(height),
+      weight: parseInt(weight),
       goal,
       diet,
+      besoinsCaloriques,
     };
 
     try {
       await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
-      setProfile(profileData); // ✅ Mise à jour du contexte
+      setProfile(profileData); // Met à jour le contexte
       alert('Profil enregistré avec succès !');
-      navigation.goBack(); // ou navigation.navigate('Home') si tu préfères
+      navigation.navigate('Home');
     } catch (e) {
       console.error('Erreur de sauvegarde du profil :', e);
       alert('Erreur lors de l’enregistrement.');
@@ -43,19 +68,20 @@ export default function ProfileSetupScreen() {
       <Text style={styles.title}>👤 Création de Profil</Text>
 
       <Text style={styles.label}>Nom</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ton prénom ou pseudo"
-        value={name}
-        onChangeText={setName}
-      />
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Prénom ou pseudo" />
+
+      <Text style={styles.label}>Âge</Text>
+      <TextInput style={styles.input} value={age} onChangeText={setAge} keyboardType="numeric" />
+
+      <Text style={styles.label}>Taille (cm)</Text>
+      <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="numeric" />
+
+      <Text style={styles.label}>Poids (kg)</Text>
+      <TextInput style={styles.input} value={weight} onChangeText={setWeight} keyboardType="numeric" />
 
       <Text style={styles.label}>🎯 Objectif</Text>
       <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={goal}
-          onValueChange={(itemValue) => setGoal(itemValue)}
-        >
+        <Picker selectedValue={goal} onValueChange={(val) => setGoal(val)}>
           <Picker.Item label="Maintien" value="maintien" />
           <Picker.Item label="Perte de poids" value="perte" />
           <Picker.Item label="Prise de masse" value="prise" />
@@ -64,10 +90,7 @@ export default function ProfileSetupScreen() {
 
       <Text style={styles.label}>🍽️ Type d’alimentation</Text>
       <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={diet}
-          onValueChange={(itemValue) => setDiet(itemValue)}
-        >
+        <Picker selectedValue={diet} onValueChange={(val) => setDiet(val)}>
           <Picker.Item label="Aucune" value="aucune" />
           <Picker.Item label="Végétarien" value="vegetarien" />
           <Picker.Item label="Vegan" value="vegan" />
