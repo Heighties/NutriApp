@@ -22,34 +22,51 @@ export default function ProfileSetupScreen() {
   const [weight, setWeight] = useState('');
   const [goal, setGoal] = useState('maintien');
   const [diet, setDiet] = useState('aucune');
-
-  const calculateCalories = () => {
-    // Formule de base : Mifflin-St Jeor (sans distinction homme/femme pour l'exemple)
-    let base = 10 * parseFloat(weight) + 6.25 * parseFloat(height) - 5 * parseFloat(age);
-    let adjusted = base;
-
-    if (goal === 'perte') adjusted -= 300;
-    else if (goal === 'prise') adjusted += 300;
-
-    return Math.round(adjusted);
-  };
+  const [sex, setSex] = useState('homme');
+  const [activityLevel, setActivityLevel] = useState('sedentaire');
 
   const handleSave = async () => {
-    if (!name || !age || !height || !weight) {
-      alert('Merci de remplir tous les champs.');
+    const ageNum = parseInt(age);
+    const heightNum = parseFloat(height);
+    const weightNum = parseFloat(weight);
+
+    if (!name || !ageNum || !heightNum || !weightNum) {
+      alert('Merci de remplir tous les champs correctement.');
       return;
     }
 
-    const besoinsCaloriques = calculateCalories();
+    let bmr =
+      sex === 'homme'
+        ? 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5
+        : 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+
+    const activityMultipliers = {
+      sedentaire: 1.2,
+      leger: 1.375,
+      modere: 1.55,
+      actif: 1.725,
+      intense: 1.9,
+    };
+
+    const calories = Math.round(bmr * activityMultipliers[activityLevel]);
+
+    const finalCalories =
+      goal === 'prise'
+        ? calories + 300
+        : goal === 'perte'
+        ? calories - 300
+        : calories;
 
     const profileData = {
       name,
-      age: parseInt(age),
-      height: parseInt(height),
-      weight: parseInt(weight),
+      age: ageNum,
+      height: heightNum,
+      weight: weightNum,
       goal,
       diet,
-      besoinsCaloriques,
+      sex,
+      activityLevel,
+      besoinsCaloriques: finalCalories,
     };
 
     try {
@@ -68,20 +85,71 @@ export default function ProfileSetupScreen() {
       <Text style={styles.title}>👤 Création de Profil</Text>
 
       <Text style={styles.label}>Nom</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Prénom ou pseudo" />
+      <TextInput
+        style={styles.input}
+        placeholder="Ton prénom ou pseudo"
+        value={name}
+        onChangeText={setName}
+      />
 
       <Text style={styles.label}>Âge</Text>
-      <TextInput style={styles.input} value={age} onChangeText={setAge} keyboardType="numeric" />
+      <TextInput
+        style={styles.input}
+        placeholder="Ton âge"
+        keyboardType="numeric"
+        value={age}
+        onChangeText={setAge}
+      />
 
       <Text style={styles.label}>Taille (cm)</Text>
-      <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="numeric" />
+      <TextInput
+        style={styles.input}
+        placeholder="Taille en cm"
+        keyboardType="numeric"
+        value={height}
+        onChangeText={setHeight}
+      />
 
       <Text style={styles.label}>Poids (kg)</Text>
-      <TextInput style={styles.input} value={weight} onChangeText={setWeight} keyboardType="numeric" />
+      <TextInput
+        style={styles.input}
+        placeholder="Poids en kg"
+        keyboardType="numeric"
+        value={weight}
+        onChangeText={setWeight}
+      />
+
+      <Text style={styles.label}>👤 Sexe</Text>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={sex}
+          onValueChange={(itemValue) => setSex(itemValue)}
+        >
+          <Picker.Item label="Homme" value="homme" />
+          <Picker.Item label="Femme" value="femme" />
+        </Picker>
+      </View>
+
+      <Text style={styles.label}>🏃 Niveau d’activité</Text>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={activityLevel}
+          onValueChange={(itemValue) => setActivityLevel(itemValue)}
+        >
+          <Picker.Item label="Sédentaire" value="sedentaire" />
+          <Picker.Item label="Légèrement actif" value="leger" />
+          <Picker.Item label="Modérément actif" value="modere" />
+          <Picker.Item label="Très actif" value="actif" />
+          <Picker.Item label="Extrêmement actif" value="intense" />
+        </Picker>
+      </View>
 
       <Text style={styles.label}>🎯 Objectif</Text>
       <View style={styles.pickerWrapper}>
-        <Picker selectedValue={goal} onValueChange={(val) => setGoal(val)}>
+        <Picker
+          selectedValue={goal}
+          onValueChange={(itemValue) => setGoal(itemValue)}
+        >
           <Picker.Item label="Maintien" value="maintien" />
           <Picker.Item label="Perte de poids" value="perte" />
           <Picker.Item label="Prise de masse" value="prise" />
@@ -90,7 +158,10 @@ export default function ProfileSetupScreen() {
 
       <Text style={styles.label}>🍽️ Type d’alimentation</Text>
       <View style={styles.pickerWrapper}>
-        <Picker selectedValue={diet} onValueChange={(val) => setDiet(val)}>
+        <Picker
+          selectedValue={diet}
+          onValueChange={(itemValue) => setDiet(itemValue)}
+        >
           <Picker.Item label="Aucune" value="aucune" />
           <Picker.Item label="Végétarien" value="vegetarien" />
           <Picker.Item label="Vegan" value="vegan" />
