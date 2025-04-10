@@ -23,7 +23,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4b2a89a8-ca4e-487e-98c5-d68af95e9345"
+      }
+    },
+    "owner": "heighties",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4b2a89a8-ca4e-487e-98c5-d68af95e9345"
     }
-    
   }
 }
