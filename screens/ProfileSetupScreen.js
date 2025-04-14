@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,77 +6,83 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUserContext } from '../context/UserContext';
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUserContext } from "../context/UserContext";
 
 export default function ProfileSetupScreen() {
   const navigation = useNavigation();
   const { setProfile } = useUserContext();
 
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [goal, setGoal] = useState('maintien');
-  const [diet, setDiet] = useState('aucune');
-  const [sex, setSex] = useState('homme');
-  const [activityLevel, setActivityLevel] = useState('sedentaire');
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [goalWeight, setGoalWeight] = useState("");
+  const [bodyFat, setBodyFat] = useState("");
+  const [muscleMass, setMuscleMass] = useState("");
+  const [goalDuration, setGoalDuration] = useState("");
+  const [gender, setGender] = useState("homme");
+  const [activityLevel, setActivityLevel] = useState("modere");
+  const [goal, setGoal] = useState("maintien");
+  const [diet, setDiet] = useState("aucune");
 
-  const handleSave = async () => {
-    const ageNum = parseInt(age);
-    const heightNum = parseFloat(height);
-    const weightNum = parseFloat(weight);
+  const calculateCalories = () => {
+    const h = parseFloat(height);
+    const w = parseFloat(weight);
+    const a = parseFloat(age);
 
-    if (!name || !ageNum || !heightNum || !weightNum) {
-      alert('Merci de remplir tous les champs correctement.');
-      return;
+    let bmr = 0;
+
+    if (gender === "homme") {
+      bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    } else {
+      bmr = 10 * w + 6.25 * h - 5 * a - 161;
     }
 
-    let bmr =
-      sex === 'homme'
-        ? 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5
-        : 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
-
     const activityMultipliers = {
-      sedentaire: 1.2,
-      leger: 1.375,
+      faible: 1.2,
       modere: 1.55,
-      actif: 1.725,
-      intense: 1.9,
+      eleve: 1.9,
     };
 
-    const calories = Math.round(bmr * activityMultipliers[activityLevel]);
+    let calories = bmr * activityMultipliers[activityLevel];
 
-    const finalCalories =
-      goal === 'prise'
-        ? calories + 300
-        : goal === 'perte'
-        ? calories - 300
-        : calories;
+    if (goal === "perte") calories -= 300;
+    if (goal === "prise") calories += 300;
+
+    return Math.round(calories);
+  };
+
+  const handleSave = async () => {
+    const besoinsCaloriques = calculateCalories();
 
     const profileData = {
       name,
-      age: ageNum,
-      height: heightNum,
-      weight: weightNum,
+      age,
+      height,
+      weight,
+      goalWeight,
+      bodyFat,
+      muscleMass,
+      goalDuration,
+      gender,
+      activityLevel,
       goal,
       diet,
-      sex,
-      activityLevel,
-      besoinsCaloriques: finalCalories,
+      besoinsCaloriques,
     };
 
     try {
-      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
+      await AsyncStorage.setItem("userProfile", JSON.stringify(profileData));
       setProfile(profileData);
-      alert('Profil enregistré avec succès !');
-      navigation.navigate('Home');
+      alert("Profil enregistré !");
+      navigation.navigate("Home");
     } catch (e) {
-      console.error('Erreur de sauvegarde du profil :', e);
-      alert('Erreur lors de l’enregistrement.');
+      console.error("Erreur de sauvegarde :", e);
+      alert("Erreur lors de l'enregistrement.");
     }
   };
 
@@ -87,81 +93,96 @@ export default function ProfileSetupScreen() {
       <Text style={styles.label}>Nom</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ton prénom ou pseudo"
         value={name}
         onChangeText={setName}
+        placeholder="Ton prénom"
       />
 
       <Text style={styles.label}>Âge</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ton âge"
-        keyboardType="numeric"
         value={age}
         onChangeText={setAge}
+        keyboardType="numeric"
       />
 
       <Text style={styles.label}>Taille (cm)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Taille en cm"
-        keyboardType="numeric"
         value={height}
         onChangeText={setHeight}
+        keyboardType="numeric"
       />
 
-      <Text style={styles.label}>Poids (kg)</Text>
+      <Text style={styles.label}>Poids actuel (kg)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Poids en kg"
-        keyboardType="numeric"
         value={weight}
         onChangeText={setWeight}
+        keyboardType="numeric"
       />
 
-      <Text style={styles.label}>👤 Sexe</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={sex}
-          onValueChange={(itemValue) => setSex(itemValue)}
-        >
+      <Text style={styles.label}>Poids objectif (kg)</Text>
+      <TextInput
+        style={styles.input}
+        value={goalWeight}
+        onChangeText={setGoalWeight}
+        keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Masse grasse (%)</Text>
+      <TextInput
+        style={styles.input}
+        value={bodyFat}
+        onChangeText={setBodyFat}
+        keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Masse musculaire (kg)</Text>
+      <TextInput
+        style={styles.input}
+        value={muscleMass}
+        onChangeText={setMuscleMass}
+        keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Durée de l’objectif (en semaines)</Text>
+      <TextInput
+        style={styles.input}
+        value={goalDuration}
+        onChangeText={setGoalDuration}
+        keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Sexe</Text>
+      <View style={styles.picker}>
+        <Picker selectedValue={gender} onValueChange={setGender}>
           <Picker.Item label="Homme" value="homme" />
           <Picker.Item label="Femme" value="femme" />
         </Picker>
       </View>
 
-      <Text style={styles.label}>🏃 Niveau d’activité</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={activityLevel}
-          onValueChange={(itemValue) => setActivityLevel(itemValue)}
-        >
-          <Picker.Item label="Sédentaire" value="sedentaire" />
-          <Picker.Item label="Légèrement actif" value="leger" />
-          <Picker.Item label="Modérément actif" value="modere" />
-          <Picker.Item label="Très actif" value="actif" />
-          <Picker.Item label="Extrêmement actif" value="intense" />
+      <Text style={styles.label}>Niveau d'activité</Text>
+      <View style={styles.picker}>
+        <Picker selectedValue={activityLevel} onValueChange={setActivityLevel}>
+          <Picker.Item label="Faible (peu d’activité)" value="faible" />
+          <Picker.Item label="Modéré (3-5x / semaine)" value="modere" />
+          <Picker.Item label="Élevé (6x+ / semaine)" value="eleve" />
         </Picker>
       </View>
 
-      <Text style={styles.label}>🎯 Objectif</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={goal}
-          onValueChange={(itemValue) => setGoal(itemValue)}
-        >
+      <Text style={styles.label}>Objectif</Text>
+      <View style={styles.picker}>
+        <Picker selectedValue={goal} onValueChange={setGoal}>
           <Picker.Item label="Maintien" value="maintien" />
           <Picker.Item label="Perte de poids" value="perte" />
           <Picker.Item label="Prise de masse" value="prise" />
         </Picker>
       </View>
 
-      <Text style={styles.label}>🍽️ Type d’alimentation</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={diet}
-          onValueChange={(itemValue) => setDiet(itemValue)}
-        >
+      <Text style={styles.label}>Type d’alimentation</Text>
+      <View style={styles.picker}>
+        <Picker selectedValue={diet} onValueChange={setDiet}>
           <Picker.Item label="Aucune" value="aucune" />
           <Picker.Item label="Végétarien" value="vegetarien" />
           <Picker.Item label="Vegan" value="vegan" />
@@ -177,46 +198,34 @@ export default function ProfileSetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    backgroundColor: '#f9fafb',
-    flexGrow: 1,
-  },
+  container: { padding: 24, backgroundColor: "#f9fafb", flexGrow: 1 },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  label: {
-    fontWeight: '600',
-    marginBottom: 8,
-    marginTop: 20,
-  },
+  label: { fontWeight: "600", marginBottom: 8, marginTop: 20 },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
-  pickerWrapper: {
-    backgroundColor: '#fff',
+  picker: {
+    backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#10b981',
+    backgroundColor: "#10b981",
     paddingVertical: 14,
     borderRadius: 8,
     marginTop: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
