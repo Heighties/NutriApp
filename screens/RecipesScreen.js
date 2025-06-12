@@ -37,7 +37,7 @@ export default function RecipesScreen() {
   const handleSelectRecipe = async (id) => {
     try {
       const res = await fetch(
-        `https://api.spoonacular.com/recipes/${id}/information?includeNutrition=false&apiKey=${SPOONACULAR_API_KEY}`
+        `https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${SPOONACULAR_API_KEY}`
       );
       const data = await res.json();
       navigation.navigate('RecipeDetails', { recipe: data });
@@ -52,7 +52,15 @@ export default function RecipesScreen() {
         <Image source={{ uri: item.image }} style={styles.image} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.used}>✅ {item.usedIngredientCount} utilisés</Text>
+          <Text style={styles.missing}>{item.missedIngredientCount} ingrédients manquants</Text>
+          {item.nutrition?.nutrients && (
+            <View style={styles.macrosContainer}>
+              <Text style={styles.macroItem}> {item.nutrition.nutrients.find(n => n.name === 'Calories')?.amount || '–'} kcal</Text>
+              <Text style={styles.macroItem}> {item.nutrition.nutrients.find(n => n.name === 'Protein')?.amount || '–'} g protéines</Text>
+              <Text style={styles.macroItem}> {item.nutrition.nutrients.find(n => n.name === 'Carbohydrates')?.amount || '–'} g glucides</Text>
+              <Text style={styles.macroItem}> {item.nutrition.nutrients.find(n => n.name === 'Fat')?.amount || '–'} g lipides</Text>
+            </View>
+          )}
           <Text style={styles.missed}>❌ {item.missedIngredientCount} manquants</Text>
         </View>
       </View>
@@ -111,5 +119,14 @@ const styles = StyleSheet.create({
   },
   missed: {
     color: '#ef4444',
+  },
+  macrosContainer: {
+    flexDirection: 'column',
+    gap: 4,
+    marginBottom: 8,
+  },
+  macroItem: {
+    fontSize: 13,
+    color: '#6b7280',
   },
 });

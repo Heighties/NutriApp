@@ -8,22 +8,20 @@ import { useProductContext } from '../context/ProductContext';
 
 export default function RecipeDetailsScreen() {
   const route = useRoute();
-  const { recipe } = route.params || {};
+  const { recipe } = route.params;
   const { fridge, shoppingList, addToShoppingList } = useProductContext();
 
   const [missingIngredients, setMissingIngredients] = useState([]);
 
   useEffect(() => {
-    if (!recipe || !recipe.extendedIngredients) return;
-
     const fridgeNames = fridge.map(p =>
       p.product_name?.toLowerCase().trim()
     );
 
-    const missing = recipe.extendedIngredients.filter(ingredient => {
+    const missing = recipe.extendedIngredients?.filter(ingredient => {
       const name = ingredient.name?.toLowerCase().trim();
-      return name && !fridgeNames.includes(name);
-    });
+      return !fridgeNames.includes(name);
+    }) || [];
 
     setMissingIngredients(missing);
   }, [recipe, fridge]);
@@ -44,46 +42,49 @@ export default function RecipeDetailsScreen() {
     addToShoppingList(formatted);
   };
 
-  if (!recipe) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.error}>❌ Aucune recette à afficher.</Text>
-      </View>
-    );
-  }
+  // --- Récupération des macros ---
+  const nutrition = recipe.nutrition || {};
+  const calories = nutrition.calories || 0;
+  const proteins = nutrition.protein || 0;
+  const carbs = nutrition.carbs || 0;
+  const fat = nutrition.fat || 0;
 
   return (
     <ScrollView style={styles.container}>
       <Image source={{ uri: recipe.image }} style={styles.image} />
       <Text style={styles.title}>{recipe.title}</Text>
 
+      {/* Macros */}
+      <View style={styles.macrosContainer}>
+        <Text style={styles.macroItem}>🔥 {calories || '–'} kcal</Text>
+        <Text style={styles.macroItem}>💪 {proteins || '–'} g protéines</Text>
+        <Text style={styles.macroItem}>🍞 {carbs || '–'} g glucides</Text>
+        <Text style={styles.macroItem}>🧈 {fat || '–'} g lipides</Text>
+      </View>
+
       <Text style={styles.sectionTitle}>📝 Ingrédients :</Text>
-      {recipe.extendedIngredients?.length > 0 ? (
-        recipe.extendedIngredients.map((ing, index) => {
-          const missing = missingIngredients.find(i => i.id === ing.id);
-          const isAdded = isInShoppingList(ing.name);
-          const color = missing ? (isAdded ? '#facc15' : '#ef4444') : '#22c55e';
+      {recipe.extendedIngredients?.map((ing, index) => {
+        const missing = missingIngredients.find(i => i.id === ing.id);
+        const isAdded = isInShoppingList(ing.name);
+        const color = missing ? (isAdded ? '#facc15' : '#ef4444') : '#22c55e';
 
-          return (
-            <View key={index} style={styles.ingredientRow}>
-              <Text style={[styles.ingredientText, { color }]}>
-                • {ing.original}
-              </Text>
+        return (
+          <View key={index} style={styles.ingredientRow}>
+            <Text style={[styles.ingredientText, { color }]}>
+              • {ing.original}
+            </Text>
 
-              {missing && !isAdded && (
-                <TouchableOpacity
-                  style={styles.addBtn}
-                  onPress={() => handleAddMissing(ing)}
-                >
-                  <Text style={styles.addBtnText}>+ Ajouter</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        })
-      ) : (
-        <Text style={styles.emptyText}>Aucune information sur les ingrédients.</Text>
-      )}
+            {missing && !isAdded && (
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={() => handleAddMissing(ing)}
+              >
+                <Text style={styles.addBtnText}>+ Ajouter</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        );
+      })}
 
       <Text style={styles.sectionTitle}>👨‍🍳 Instructions :</Text>
       {recipe.analyzedInstructions?.[0]?.steps?.length > 0 ? (
@@ -91,7 +92,9 @@ export default function RecipeDetailsScreen() {
           <Text key={i} style={styles.stepText}>👉 {step.step}</Text>
         ))
       ) : (
-        <Text style={styles.emptyText}>Aucune instruction disponible.</Text>
+        <Text style={{ fontStyle: 'italic', color: '#888' }}>
+          Pas d'instructions détaillées disponibles.
+        </Text>
       )}
     </ScrollView>
   );
@@ -111,6 +114,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 15,
+  },
+  macrosContainer: {
+    flexDirection: 'column',
+    gap: 5,
+    marginBottom: 20,
+  },
+  macroItem: {
+    fontSize: 15,
   },
   sectionTitle: {
     fontSize: 18,
@@ -142,20 +153,6 @@ const styles = StyleSheet.create({
   addBtnText: {
     color: '#fff',
     fontSize: 13,
-    fontWeight: 'bold',
-  },
-  emptyText: {
-    fontStyle: 'italic',
-    color: '#999',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  error: {
-    color: '#ef4444',
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });
